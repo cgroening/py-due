@@ -1,11 +1,11 @@
 [project]
-name = "termplate"
+name = "due"
 version = "0.1.0"
 authors = [
     { name = "Corvin Gröning" }
 ]
-description = "A template for building terminal applications in Python"
-keywords = ["cli", "tui"]
+description = "Show tasks with @due tags from Markdown files"
+keywords = ["cli", "tasks", "markdown", "due"]
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [
@@ -15,16 +15,15 @@ classifiers = [
 ]
 dependencies = [
     "rich>=14.3.3",
-    "textual>=0.50.0",
     "InquirerPy>=0.3.4",
     "PyYAML>=6.0.0",
     "typer>=0.24.1",
 ]
 
 [project.urls]
-Homepage = "https://github.com/cgroening/py-termplate"
-Repository = "https://github.com/cgroening/py-termplate"
-Changelog = "https://github.com/cgroening/py-termplate/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/cgroening/due"
+Repository = "https://github.com/cgroening/due"
+Changelog = "https://github.com/cgroening/due/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [
@@ -32,9 +31,6 @@ dev = [
     "pytest-cov>=7.0",
     "coverage>=7.13.4"
 ]
-
-# [tool.setuptools]
-# packages = ["termplate"]
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -48,6 +44,8 @@ exclude = [
     ".venv",
     "venv",
     "**/node_modules",
+    "termplate",
+    "sample_data",
 ]
 reportUnannotatedClassAttribute = "none"
 reportUnusedCallResult = "none"
@@ -57,7 +55,7 @@ reportMissingTypeStubs = "none"
 reportImplicitStringConcatenation = "none"
 
 [project.scripts]
-tp = "termplate.main:main"
+due = "due.main:main"
 
 [tool.pytest.ini_options]
-testpaths = ["termplate/tests"]
+testpaths = ["due/tests"]
