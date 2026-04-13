@@ -25,8 +25,8 @@ _PFX_NONE    = '    '
 
 
 class ListCommand:
-    _FLAT_COLS    = ('Fällig', 'Datei', 'Status', 'Task')
-    _GROUPED_COLS = ('Fällig', 'Status', 'Task')
+    _FLAT_COLS    = ('Due Date', 'File', 'St.', 'Task')
+    _GROUPED_COLS = ('Due Date', 'St.', 'Task')
 
     def __init__(
         self,
@@ -87,7 +87,7 @@ class ListCommand:
         s = str_with_fixed_width
         # Header is indented by the width of the urgency prefix (4 chars)
         header = (
-            f'  {_PFX_NONE}{s(self._FLAT_COLS[0], col_due)}{_SEP}'
+            f'   {_PFX_NONE}{s(self._FLAT_COLS[0], col_due)}{_SEP}'
             f'{s(self._FLAT_COLS[1], col_file)}{_SEP}'
             f'{s(self._FLAT_COLS[2], col_status)}{_SEP}'
             f'{self._FLAT_COLS[3]}'
@@ -150,7 +150,7 @@ class ListCommand:
 
         s = str_with_fixed_width
         header = (
-            f'  {_PFX_NONE}{s(self._GROUPED_COLS[0], col_due)}{_SEP}'
+            f'   {_PFX_NONE}{s(self._GROUPED_COLS[0], col_due)}{_SEP}'
             f'{s(self._GROUPED_COLS[1], col_status)}{_SEP}'
             f'{self._GROUPED_COLS[2]}'
         )
