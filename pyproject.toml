@@ -1,0 +1,63 @@
+[project]
+name = "termplate"
+version = "0.1.0"
+authors = [
+    { name = "Corvin Gröning" }
+]
+description = "A template for building terminal applications in Python"
+keywords = ["cli", "tui"]
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Environment :: Console",
+]
+dependencies = [
+    "rich>=14.3.3",
+    "textual>=0.50.0",
+    "InquirerPy>=0.3.4",
+    "PyYAML>=6.0.0",
+    "typer>=0.24.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/cgroening/py-termplate"
+Repository = "https://github.com/cgroening/py-termplate"
+Changelog = "https://github.com/cgroening/py-termplate/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0",
+    "pytest-cov>=7.0",
+    "coverage>=7.13.4"
+]
+
+# [tool.setuptools]
+# packages = ["termplate"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.pyright]
+typeCheckingMode = "strict"
+exclude = [
+    "**/.*",
+    "**/__pycache__",
+    "**/*.pyc",
+    ".venv",
+    "venv",
+    "**/node_modules",
+]
+reportUnannotatedClassAttribute = "none"
+reportUnusedCallResult = "none"
+reportCallInDefaultInitializer = "none"
+reportImplicitOverride = "none"
+reportMissingTypeStubs = "none"
+reportImplicitStringConcatenation = "none"
+
+[project.scripts]
+tp = "termplate.main:main"
+
+[tool.pytest.ini_options]
+testpaths = ["termplate/tests"]

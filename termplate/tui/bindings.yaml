@@ -1,0 +1,53 @@
+# Bindings that will be always shown - regardless of current tab
+_global:
+  - key: q
+    action: quit
+    description: Quit
+    tooltip: Exit the application
+    priority: true
+    row: 1
+  - key: w
+    action: prev_theme
+    description: Previous Theme
+    tooltip: Activate the previous color theme
+    key_display: w
+    priority: true
+    row: 1
+  - key: s
+    action: next_theme
+    description: Next Theme
+    tooltip: Activate the next color theme
+    key_display: s
+    priority: true
+    row: 1
+
+# Tab-specific bindings - group name becomes the action prefix (tasks_tab_add_task)
+tasks_tab:
+  - key: a
+    action: add_task
+    description: Add
+    tooltip: Add a new task
+    row: 0
+  - key: d
+    action: mark_done
+    description: Done
+    tooltip: Mark the selected task as done
+    row: 0
+
+done_tab:
+  - key: x
+    action: xxx
+    description: XXX
+    tooltip: xxxxx
+    row: 0
+
+# done_tab: []
+
+# Screen-specific bindings (group name ends with _screen, action used as-is)
+add_screen:
+  - key: escape
+    action: cancel
+    description: Cancel
+    tooltip: Cancel adding a task
+    priority: true
+    row: 0

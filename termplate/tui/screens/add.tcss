@@ -1,0 +1,30 @@
+AddScreen {
+    align: center middle;
+}
+
+#dialog {
+    background: $surface;
+    border: thick $primary;
+    padding: 1 2;
+    width: 60;
+    height: auto;
+}
+
+#dialog-title {
+    text-align: center;
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+#task-input {
+    margin-bottom: 1;
+}
+
+#buttons {
+    align: right middle;
+    height: auto;
+}
+
+#buttons Button {
+    margin-left: 1;
+}
