@@ -26,8 +26,29 @@ _PFX_NONE    = '    '
 
 
 class ListCommand:
+    """
+    Render due tasks in a fuzzy finder and opens the selected one in the editor.
+
+    Supports two views:
+
+    - grouped by file (default) and
+    - flat sorted by due date.
+
+    Tasks are loaded from Markdown files in the current working directory via
+    `FilesystemMarkdownStorage` and filtered/sorted by `TaskService`.
+    Selecting a task row opens the file at the matching line; selecting a file
+    header opens it at line 1.
+
+    Attributes:
+    -----------
+    _FLAT_COLS: tuple[str, str, str, str]
+        Column headers for the flat view (sorted by date).
+    _GROUPED_COLS: tuple[str, str, str]
+        Column headers for the grouped view (by file).
+    """
     _FLAT_COLS    = ('Due Date', 'File', 'St.', 'Task')
     _GROUPED_COLS = ('Due Date', 'St.', 'Task')
+
 
     def __init__(
         self,
