@@ -6,13 +6,19 @@ from due.storage.config.yaml import YamlConfigStorage
 from due.storage.markdown.filesystem import FilesystemMarkdownStorage
 
 
+to = typer.Option
+
+
 # Composition root
 _storage        = FilesystemMarkdownStorage()
 _service        = TaskService()
 _config_storage = YamlConfigStorage()
 
 app = typer.Typer(
-    help='Show tasks with @due tags from Markdown files in the current directory.',
+    help=(
+        'Show tasks with @due tags from Markdown files '
+        'in the current directory.'
+    ),
     invoke_without_command=True,
 )
 
@@ -60,24 +66,24 @@ def _run(
 @app.callback()
 def callback(
     ctx: typer.Context,
-    sort_by_date: bool = typer.Option(False, '--sort', '-s', help=_SORT_HELP),
-    all_tasks: bool = typer.Option(False, '--all-tasks', '-a', help=_ALL_TASKS_HELP),
-    all_statuses: bool = typer.Option(False, '--all-statuses', '-A', help=_ALL_STAT_HELP),
-    when: Optional[int] = typer.Option(None, '--when', '-w', help=_WHEN_HELP),
+    sort_by_date: bool  = to(False, '--sort', '-s', help=_SORT_HELP),
+    all_tasks: bool     = to(False, '--all-tasks', '-a', help=_ALL_TASKS_HELP),
+    all_statuses: bool  = to(False, '--all-statuses', '-A', help=_ALL_STAT_HELP),
+    when: Optional[int] = to(None, '--when', '-w', help=_WHEN_HELP),
 ) -> None:
-    """due – List tasks with @due tags from Markdown files."""
+    """due – Lists tasks with @due tags from Markdown files."""
     if ctx.invoked_subcommand is None:
         _run(sort_by_date, all_tasks, all_statuses, when)
 
 
 @app.command(name='list')
 def list_cmd(
-    sort_by_date: bool = typer.Option(False, '--sort', '-s', help=_SORT_HELP),
-    all_tasks: bool = typer.Option(False, '--all-tasks', '-a', help=_ALL_TASKS_HELP),
-    all_statuses: bool = typer.Option(False, '--all-statuses', '-A', help=_ALL_STAT_HELP),
-    when: Optional[int] = typer.Option(None, '--when', '-w', help=_WHEN_HELP),
+    sort_by_date: bool  = to(False, '--sort', '-s', help=_SORT_HELP),
+    all_tasks: bool     = to(False, '--all-tasks', '-a', help=_ALL_TASKS_HELP),
+    all_statuses: bool  = to(False, '--all-statuses', '-A', help=_ALL_STAT_HELP),
+    when: Optional[int] = to(None, '--when', '-w', help=_WHEN_HELP),
 ) -> None:
-    """List tasks with @due tags (default command)."""
+    """Lists tasks with @due tags (default command)."""
     _run(sort_by_date, all_tasks, all_statuses, when)
 
 
