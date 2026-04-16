@@ -6,7 +6,8 @@ from rich.console import Console
 from InquirerPy import inquirer
 from InquirerPy.utils import get_style  # type: ignore
 from InquirerPy.base.control import Choice
-from due.cli.output import print_error, print_warning, str_with_fixed_width
+from termz.cli.output import print_error, print_warning
+from termz.util.string import str_with_fixed_width
 from due.domain.models import Config, Task
 from due.services.task_service import TaskService
 from due.storage.config.yaml import YamlConfigStorage

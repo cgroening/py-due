@@ -1,6 +1,6 @@
 from typing import Optional
 import typer
-from due.cli.output import print_error
+from termz.cli.output import print_error
 from due.services.task_service import TaskService
 from due.storage.config.yaml import YamlConfigStorage
 from due.storage.markdown.filesystem import FilesystemMarkdownStorage
