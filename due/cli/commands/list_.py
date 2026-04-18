@@ -16,7 +16,7 @@ from due.storage.markdown.filesystem import FilesystemMarkdownStorage
 
 console = Console()
 
-# Visual separators used in rows and the column-header line
+# Visual separator used in rows and the column-header line
 _SEP = ' │ '
 
 # Fixed-width urgency prefixes (4 chars each, to keep columns aligned)
@@ -27,9 +27,10 @@ _PFX_NONE    = '    '
 
 class ListCommand:
     """
-    Render due tasks in a fuzzy finder and opens the selected one in the editor.
+    Renders due tasks in a fuzzy finder and opens the selected one in the
+    configured editor.
 
-    Supports two views:
+    Two views are supported:
 
     - grouped by file (default) and
     - flat sorted by due date.
@@ -41,13 +42,24 @@ class ListCommand:
 
     Attributes:
     -----------
-    _FLAT_COLS: tuple[str, str, str, str]
+    _FLAT_COLS : tuple[str, str, str, str]
         Column headers for the flat view (sorted by date).
-    _GROUPED_COLS: tuple[str, str, str]
+    _GROUPED_COLS : tuple[str, str, str]
         Column headers for the grouped view (by file).
+    _storage : FilesystemMarkdownStorage
+        Storage instance for loading tasks from Markdown files.
+    _service : TaskService
+        Service instance for filtering, sorting, and grouping tasks.
+    _config_storage : YamlConfigStorage
+        Storage instance for loading configuration (e.g., editor settings).
     """
     _FLAT_COLS    = ('Due Date', 'File', 'St.', 'Task')
     _GROUPED_COLS = ('Due Date', 'St.', 'Task')
+
+    _storage: FilesystemMarkdownStorage
+    _service: TaskService
+    _config_storage: YamlConfigStorage
+    _config: Config
 
 
     def __init__(
@@ -56,13 +68,13 @@ class ListCommand:
         service: TaskService,
         config_storage: YamlConfigStorage,
     ) -> None:
+        """
+        Initializes the `ListCommand` with the required storage and
+        service instances.
+        """
         self._storage = storage
         self._service = service
         self._config_storage = config_storage
-
-    # ------------------------------------------------------------------
-    # Public entry point
-    # ------------------------------------------------------------------
 
     def run(
         self,
@@ -71,16 +83,13 @@ class ListCommand:
         all_statuses: bool = False,
         when: int | None = None,
     ) -> None:
-        config = self._config_storage.load()
-        cwd    = os.getcwd()
+        """
+        Main entry point for the command. Loads tasks, applies filters/sorting,
+        renders the fuzzy finder and opens the selected task in the editor.
+        """
+        self._config = self._config_storage.load()
 
-        all_file_tasks = self._storage.get_all_tasks(cwd)
-        tasks = self._service.filter_tasks(
-            all_file_tasks,
-            all_statuses=all_statuses,
-            all_tasks=all_tasks,
-            when=when,
-        )
+        tasks = self._load_tasks(all_statuses=all_statuses, all_tasks=all_tasks, when=when)
 
         if not tasks:
             print_warning('No tasks found.')
@@ -97,7 +106,19 @@ class ListCommand:
             print_warning('Selection cancelled.')
             return
 
-        self._open_editor(chosen, config)
+        self._open_editor(chosen)
+
+    def _load_tasks(self, all_statuses: bool, all_tasks: bool, when: int | None) -> list[Task]:
+        cwd = os.getcwd()
+
+        all_file_tasks = self._storage.get_all_tasks(cwd)
+        return self._service.filter_tasks(
+            all_file_tasks,
+            all_statuses=all_statuses,
+            all_tasks=all_tasks,
+            when=when,
+        )
+
 
     # ------------------------------------------------------------------
     # Flat view (sorted by date)
@@ -276,15 +297,10 @@ class ListCommand:
 
         return result
 
-    # ------------------------------------------------------------------
-    # Editor integration
-    # ------------------------------------------------------------------
-
-    @staticmethod
-    def _open_editor(task: Task, config: Config) -> None:
+    def _open_editor(self, task: Task) -> None:
         """Open the file at the task's line number in the configured editor."""
         abs_path = os.path.abspath(task.file_path)
-        editor   = config.editor or os.environ.get('EDITOR', 'nvim')
+        editor   = self._config.editor or os.environ.get('EDITOR', 'nvim')
 
         cmd = [editor, f'+{task.line_number}', abs_path]
         try:
