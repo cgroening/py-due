@@ -10,12 +10,12 @@ class TaskService:
         self,
         tasks: list[Task],
         include_undated_tasks: bool = False,
-        include_checked_and_cancelled_tasks: bool = False,
+        include_closed_tasks: bool = False,
         due_filter: int | None = None,
     ) -> list[Task]:
         result = tasks
 
-        if not include_checked_and_cancelled_tasks:
+        if not include_closed_tasks:
             result = [t for t in result if t.status not in HIDDEN_STATUSES]
 
         if not include_undated_tasks:

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Annotated, Optional
 import typer
 from termz.cli.output import print_error
 from due.services.task_service import TaskService
@@ -19,7 +19,8 @@ app = typer.Typer(
     invoke_without_command=True,
 )
 
-_SORT_HELP     = 'Sort by due date (oldest first) instead of grouping by file.'
+# Help texts for options
+_SORT_HELP = 'Sort by due date (oldest first) instead of grouping by file.'
 _INCLUDE_UNDATED_HELP = (
     'Include tasks without a @due tag. '
     'By default only tasks with a @due tag are shown.'
@@ -34,6 +35,24 @@ _DUE_FILTER_HELP = (
     'Tasks with unparseable @due dates are excluded when this flag is set.'
 )
 
+# Type aliases for options
+SortByDate     = Annotated[
+    bool,
+    typer.Option('--sort-by-date',    '-s', help=_SORT_HELP)
+]
+IncludeUndated = Annotated[
+    bool,
+    typer.Option('--include-undated', '-u', help=_INCLUDE_UNDATED_HELP)
+]
+IncludeClosed  = Annotated[
+    bool,
+    typer.Option('--include-closed',  '-c', help=_INCLUDE_CLOSED_HELP)
+]
+DueFilter      = Annotated[
+    Optional[int],
+    typer.Option('--due-filter',      '-d', help=_DUE_FILTER_HELP)
+]
+
 
 def _validate_due_filter(due_filter: int | None) -> None:
     if due_filter is not None and due_filter not in (-1, 0, 1):
@@ -47,7 +66,7 @@ def _validate_due_filter(due_filter: int | None) -> None:
 def _run(
     sort_tasks_by_date: bool,
     include_undated_tasks: bool,
-    include_checked_and_cancelled_tasks: bool,
+    include_closed_tasks: bool,
     due_filter: int | None,
 ) -> None:
     _validate_due_filter(due_filter)
@@ -55,7 +74,7 @@ def _run(
     ListCommand(_storage, _service, _config_storage).run(
         sort_tasks_by_date=sort_tasks_by_date,
         include_undated_tasks=include_undated_tasks,
-        include_checked_and_cancelled_tasks=include_checked_and_cancelled_tasks,
+        include_closed_tasks=include_closed_tasks,
         due_filter=due_filter,
     )
 
@@ -63,18 +82,10 @@ def _run(
 @app.callback()
 def callback(
     ctx: typer.Context,
-    sort_by_date: bool = typer.Option(
-        False, '--sort-by-date', '-s', help=_SORT_HELP
-    ),
-    include_undated_tasks: bool = typer.Option(
-        False, '--include-undated', '-u', help=_INCLUDE_UNDATED_HELP
-    ),
-    include_checked_and_cancelled_tasks: bool = typer.Option(
-        False, '--include-closed', '-c', help=_INCLUDE_CLOSED_HELP
-    ),
-    due_filter: Optional[int] = typer.Option(
-        None, '--when', '-w', help=_DUE_FILTER_HELP
-    ),
+    sort_by_date: SortByDate = False,
+    include_undated_tasks: IncludeUndated = False,
+    include_checked_and_cancelled_tasks: IncludeClosed = False,
+    due_filter: DueFilter = None,
 ) -> None:
     """due – Lists tasks with @due tags from Markdown files."""
     if ctx.invoked_subcommand is None:
@@ -88,18 +99,10 @@ def callback(
 
 @app.command(name='list')
 def list_cmd(
-    sort_by_date: bool = typer.Option(
-        False, '--sort-by-date', '-s', help=_SORT_HELP
-    ),
-    include_undated_tasks: bool = typer.Option(
-        False, '--include-undated', '-u', help=_INCLUDE_UNDATED_HELP
-    ),
-    include_checked_and_cancelled_tasks: bool = typer.Option(
-        False, '--include-closed', '-c', help=_INCLUDE_CLOSED_HELP
-    ),
-    due_filter: Optional[int] = typer.Option(
-        None, '--when', '-w', help=_DUE_FILTER_HELP
-    )
+    sort_by_date: SortByDate = False,
+    include_undated_tasks: IncludeUndated = False,
+    include_checked_and_cancelled_tasks: IncludeClosed = False,
+    due_filter: DueFilter = None,
 ) -> None:
     """Lists tasks with @due tags (default command)."""
     _run(
