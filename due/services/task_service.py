@@ -9,34 +9,31 @@ class TaskService:
     def filter_tasks(
         self,
         tasks: list[Task],
-        all_statuses: bool = False,
-        all_tasks: bool = False,
-        when: int | None = None,
+        include_undated_tasks: bool = False,
+        include_checked_and_cancelled_tasks: bool = False,
+        due_filter: int | None = None,
     ) -> list[Task]:
         result = tasks
 
-        # Filter out [x] and [c] unless --all-statuses
-        if not all_statuses:
+        if not include_checked_and_cancelled_tasks:
             result = [t for t in result if t.status not in HIDDEN_STATUSES]
 
-        # Filter to only tasks with @due tag unless --all-tasks
-        if not all_tasks:
+        if not include_undated_tasks:
             result = [t for t in result if t.has_due_tag]
 
-        # Filter by date relationship (only applicable if due_date is parseable)
-        if when is not None:
+        if due_filter is not None:
             today = date.today()
-            if when == -1:
+            if due_filter == -1:
                 result = [
                     t for t in result
                     if t.due_date is not None and t.due_date < today
                 ]
-            elif when == 0:
+            elif due_filter == 0:
                 result = [
                     t for t in result
                     if t.due_date is not None and t.due_date == today
                 ]
-            elif when == 1:
+            elif due_filter == 1:
                 result = [
                     t for t in result
                     if t.due_date is not None and t.due_date > today

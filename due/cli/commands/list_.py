@@ -78,10 +78,10 @@ class ListCommand:
 
     def run(
         self,
-        sort_by_date: bool = False,
-        all_tasks: bool = False,
-        all_statuses: bool = False,
-        when: int | None = None,
+        sort_tasks_by_date: bool = False,
+        include_undated_tasks: bool = False,
+        include_checked_and_cancelled_tasks: bool = False,
+        due_filter: int | None = None,
     ) -> None:
         """
         Main entry point for the command. Loads tasks, applies filters/sorting,
@@ -89,13 +89,17 @@ class ListCommand:
         """
         self._config = self._config_storage.load()
 
-        tasks = self._load_tasks(all_statuses=all_statuses, all_tasks=all_tasks, when=when)
+        tasks = self._load_tasks(
+            include_undated_tasks=include_undated_tasks,
+            include_checked_and_cancelled_tasks=include_checked_and_cancelled_tasks,
+            due_filter=due_filter,
+        )
 
         if not tasks:
             print_warning('No tasks found.')
             return
 
-        if sort_by_date:
+        if sort_tasks_by_date:
             tasks  = self._service.sort_by_date(tasks)
             chosen = self._show_flat(tasks)
         else:
@@ -108,15 +112,20 @@ class ListCommand:
 
         self._open_editor(chosen)
 
-    def _load_tasks(self, all_statuses: bool, all_tasks: bool, when: int | None) -> list[Task]:
+    def _load_tasks(
+        self,
+        include_undated_tasks: bool,
+        include_checked_and_cancelled_tasks: bool,
+        due_filter: int | None,
+    ) -> list[Task]:
         cwd = os.getcwd()
 
         all_file_tasks = self._storage.get_all_tasks(cwd)
         return self._service.filter_tasks(
             all_file_tasks,
-            all_statuses=all_statuses,
-            all_tasks=all_tasks,
-            when=when,
+            include_undated_tasks=include_undated_tasks,
+            include_checked_and_cancelled_tasks=include_checked_and_cancelled_tasks,
+            due_filter=due_filter,
         )
 
 
