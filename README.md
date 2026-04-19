@@ -10,6 +10,8 @@ the exact line in your editor.
 
 <img src="https://raw.githubusercontent.com/cgroening/py-due/main/images/logo.png" width="200" alt="Termplate Logo">
 
+![Screenshot](https://raw.githubusercontent.com/cgroening/py-due/main/images/screenshot.png)
+
 ## Table of Contents
 
 - [Features](#features)
