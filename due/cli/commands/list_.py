@@ -72,6 +72,7 @@ class ListCommand:
     _service: TaskService
     _config_storage: YamlConfigStorage
     _config: Config
+    _root_dir: str
 
 
     def __init__(
@@ -90,6 +91,7 @@ class ListCommand:
 
     def run(
         self,
+        root_dir: str,
         sort_tasks_by_date: bool = False,
         include_undated_tasks: bool = False,
         include_closed_tasks: bool = False,
@@ -111,9 +113,9 @@ class ListCommand:
             If `True`, checked (`[x]`) and cancelled (`[c]`) tasks are included.
             By default these statuses are hidden.
         """
-        self._config = self._config_storage.load()
+        self._config   = self._config_storage.load()
+        self._root_dir = root_dir
 
-        # Load all tasks from current directory
         tasks = self._load_tasks(
             include_undated_tasks=include_undated_tasks,
             include_checked_and_cancelled_tasks=include_closed_tasks,
@@ -138,12 +140,10 @@ class ListCommand:
         due_filter: int | None,
     ) -> list[Task]:
         """
-        Returns a list of tasks loaded from Markdown files in the current
+        Returns a list of tasks loaded from Markdown files in the given root
         directory, filtered according to the provided options.
         """
-        cwd = os.getcwd()
-
-        all_file_tasks = self._storage.get_all_tasks(cwd)
+        all_file_tasks = self._storage.get_all_tasks(self._root_dir)
         return self._service.filter_tasks(
             all_file_tasks,
             include_undated_tasks=include_undated_tasks,
@@ -224,7 +224,7 @@ class ListCommand:
             10, min(max((len(t.due_date_str) for t in tasks), default=10), 15)
         )
         col_status = max(len(self._FLAT_COLS[2]), 3)  # 'Status' = 6
-        max_file   = max((len(t.file_path) for t in tasks), default=5)
+        max_file   = max((len(self._display_path(t.file_path)) for t in tasks), default=5)
         col_file   = min(max(len(self._FLAT_COLS[1]), max_file), 40)
 
         # 4-char urgency prefix + 3 separators + fuzzy-prompt left padding
@@ -246,7 +246,7 @@ class ListCommand:
         """
         prefix = self._urgency_prefix(task)
         due    = str_with_fixed_width(task.due_date_str, column_widths.due)
-        file_  = str_with_fixed_width(task.file_path, column_widths.file)
+        file_  = str_with_fixed_width(self._display_path(task.file_path), column_widths.file)
         status = str_with_fixed_width(task.status_display, column_widths.status)
         text   = str_with_fixed_width(task.text, column_widths.text)
         return f'{prefix}{due}{_SEP}{file_}{_SEP}{status}{_SEP}{text}'
@@ -347,11 +347,12 @@ class ListCommand:
         total_row_width = 4 + 2*len(_SEP) + column_widths.total()
 
         for file_path, tasks in groups.items():
-            # File headers use the path string as value.
+            # File headers use the absolute path as value.
             # Selecting a header opens the file at line 1.
-            fill = '─' * max(0, total_row_width - len(file_path) - 4)
+            display = self._display_path(file_path)
+            fill = '─' * max(0, total_row_width - len(display) - 4)
             choices.append(
-                Choice(value=file_path, name=f' ── {file_path} {fill}')
+                Choice(value=file_path, name=f' ── {display} {fill}')
             )
 
             for task in tasks:
@@ -378,6 +379,10 @@ class ListCommand:
         status = str_with_fixed_width(task.status_display, column_widths.status)
         text   = str_with_fixed_width(task.text, column_widths.text)
         return f'{prefix}{due}{_SEP}{status}{_SEP}{text}'
+
+    def _display_path(self, abs_path: str) -> str:
+        """Returns the path relative to root_dir for display purposes."""
+        return os.path.relpath(abs_path, self._root_dir)
 
     @staticmethod
     def _urgency_prefix(task: Task) -> str:
@@ -435,7 +440,7 @@ class ListCommand:
 
     def _open_editor(self, task: Task) -> None:
         """Opens the file at the task's line number in the configured editor."""
-        abs_path = os.path.abspath(task.file_path)
+        abs_path = task.file_path
         editor   = self._config.editor or os.environ.get('EDITOR', 'nvim')
 
         cmd = [editor, f'+{task.line_number}', abs_path]

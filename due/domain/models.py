@@ -13,7 +13,7 @@ class Task:
 
     """
 
-    file_path: str        # relative to CWD
+    file_path: str        # absolute path
     line_number: int      # 1-based, first line of the task
     status: str           # ' ', 'x', '.', 'c', '/'
     text: str             # task text (first line, cleaned of @tags)

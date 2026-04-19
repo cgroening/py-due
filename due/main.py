@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Annotated, Optional
 import typer
 from termz.cli.output import print_error
@@ -13,8 +14,9 @@ _config_storage = YamlConfigStorage()
 
 app = typer.Typer(
     help=(
-        'Show tasks with @due tags from Markdown files '
-        'in the current directory.'
+        'Show tasks with @due tags from Markdown files. '
+        'Searches the current directory by default, '
+        'or the given PATH if provided.'
     ),
     invoke_without_command=True,
 )
@@ -52,6 +54,10 @@ DueFilter      = Annotated[
     Optional[int],
     typer.Option('--due-filter',      '-d', help=_DUE_FILTER_HELP)
 ]
+PathArg        = Annotated[
+    Optional[str],
+    typer.Argument(help='Directory to search (default: current directory).')
+]
 
 
 def _validate_due_filter(due_filter: int | None) -> None:
@@ -68,10 +74,13 @@ def _run(
     include_undated_tasks: bool,
     include_closed_tasks: bool,
     due_filter: int | None,
+    path: str | None,
 ) -> None:
     _validate_due_filter(due_filter)
+    root_dir = str(Path(path).resolve()) if path else str(Path.cwd())
     from due.cli.commands.list_ import ListCommand
     ListCommand(_storage, _service, _config_storage).run(
+        root_dir=root_dir,
         sort_tasks_by_date=sort_tasks_by_date,
         include_undated_tasks=include_undated_tasks,
         include_closed_tasks=include_closed_tasks,
@@ -82,6 +91,7 @@ def _run(
 @app.callback()
 def callback(
     ctx: typer.Context,
+    path: PathArg = None,
     sort_by_date: SortByDate = False,
     include_undated_tasks: IncludeUndated = False,
     include_checked_and_cancelled_tasks: IncludeClosed = False,
@@ -93,12 +103,14 @@ def callback(
             sort_by_date,
             include_undated_tasks,
             include_checked_and_cancelled_tasks,
-            due_filter
+            due_filter,
+            path,
         )
 
 
 @app.command(name='list')
 def list_cmd(
+    path: PathArg = None,
     sort_by_date: SortByDate = False,
     include_undated_tasks: IncludeUndated = False,
     include_checked_and_cancelled_tasks: IncludeClosed = False,
@@ -109,7 +121,8 @@ def list_cmd(
         sort_by_date,
         include_undated_tasks,
         include_checked_and_cancelled_tasks,
-        due_filter
+        due_filter,
+        path,
     )
 
 

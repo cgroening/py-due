@@ -37,8 +37,8 @@ class FilesystemMarkdownStorage(BaseMarkdownStorage):
             if any(part.startswith('.') for part in md_file.relative_to(root).parts):
                 continue
             try:
-                rel_path = str(md_file.relative_to(root))
-                tasks.extend(self._parse_file(md_file, rel_path))
+                abs_path = str(md_file.resolve())
+                tasks.extend(self._parse_file(md_file, abs_path))
             except Exception:
                 pass
 
