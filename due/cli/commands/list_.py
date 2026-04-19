@@ -33,6 +33,9 @@ class ColumnWidths:
     status: int
     text: int
 
+    def total(self) -> int:
+        return self.due + self.file + self.status + self.text
+
 
 class ListCommand:
     """
@@ -49,8 +52,8 @@ class ListCommand:
     Selecting a task row opens the file at the matching line; selecting a file
     header opens it at line 1.
 
-    Attributes:
-    -----------
+    Attributes
+    ----------
     _FLAT_COLS : tuple[str, str, str, str]
         Column headers for the flat view (sorted by date).
     _GROUPED_COLS : tuple[str, str, str]
@@ -96,8 +99,8 @@ class ListCommand:
         Main entry point for the command. Loads tasks, applies filters/sorting,
         renders the fuzzy finder and opens the selected task in the editor.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sort_tasks_by_date : bool
             If `True`, tasks are shown in a flat list sorted by due date.
             If `False` (default), tasks are grouped by file.
@@ -206,7 +209,7 @@ class ListCommand:
         return [
             Choice(
                 value=i,
-                name=self._by_date_row(task, column_widths),
+                name=self._row_for_sorted_by_date_view(task, column_widths),
             )
             for i, task in enumerate(tasks)
         ]
@@ -234,7 +237,9 @@ class ListCommand:
             due=col_due, file=col_file, status=col_status, text=col_text
         )
 
-    def _by_date_row(self, task: Task, column_widths: ColumnWidths) -> str:
+    def _row_for_sorted_by_date_view(
+        self, task: Task, column_widths: ColumnWidths
+    ) -> str:
         """
         Returns the formatted row string for a task in the flat view (sorted
         by date), with columns for due date, file path, status and task text.
@@ -246,43 +251,19 @@ class ListCommand:
         text   = str_with_fixed_width(task.text, column_widths.text)
         return f'{prefix}{due}{_SEP}{file_}{_SEP}{status}{_SEP}{text}'
 
-    # ------------------------------------------------------------------
-    # Grouped view (by file, default)
-    # ------------------------------------------------------------------
-
-    def _show_tasks_grouped_by_file(self, groups: dict[str, list[Task]]) -> Task | None:
+    def _show_tasks_grouped_by_file(
+        self, groups: dict[str, list[Task]]
+    ) -> Task | None:
         """
         Renders tasks in a fuzzy finder grouped by file, with columns for due
         date, status and task text. Returns the selected task.
         """
-        all_tasks = [t for ts in groups.values() for t in ts]
-        col_due, col_status, col_text = self._grouped_by_file_widths(all_tasks)
-
-        s = str_with_fixed_width
-        header = (
-            f'   {_PFX_NONE}{s(self._GROUPED_COLS[0], col_due)}{_SEP}'
-            f'{s(self._GROUPED_COLS[1], col_status)}{_SEP}'
-            f'{self._GROUPED_COLS[2]}'
+        tasks = self._tasks_from_groups(groups)
+        column_widths = self._grouped_by_file_widths(tasks)
+        header = self._grouped_by_file_header(column_widths)
+        tasks_by_choice_index, choices = self._fzf_choices_grouped_by_file(
+            groups, column_widths
         )
-
-        task_index: list[Task] = []
-        choices: list[Choice]  = []
-
-        total_row_width = 4 + col_due + len(_SEP) + col_status + len(_SEP) + col_text
-
-        for file_path, tasks in groups.items():
-            # File headers use the path string as value.
-            # Selecting a header opens the file at line 1.
-            fill = '─' * max(0, total_row_width - len(file_path) - 4)
-            choices.append(Choice(value=file_path, name=f' ── {file_path} {fill}'))
-
-            for task in tasks:
-                idx = len(task_index)
-                task_index.append(task)
-                choices.append(Choice(
-                    value=idx,
-                    name=self._grouped_by_file_row(task, col_due, col_status, col_text),
-                ))
 
         print()
         try:
@@ -291,43 +272,122 @@ class ListCommand:
             return None
 
         if isinstance(result, int):
-            return task_index[result]
+            # Result is an index into the tasks_by_choice_index list,
+            # which maps fuzzy choice indices to tasks
+            return tasks_by_choice_index[result]
         if isinstance(result, str):
-            # File header selected → open the file at line 1
+            # File header selected -> open the file at line 1
             return Task(file_path=result, line_number=1, status=' ', text='')
         return None
 
+    @staticmethod
+    def _tasks_from_groups(groups: dict[str, list[Task]]) -> list[Task]:
+        """Flattens the grouped tasks into a single list of tasks."""
+        all_tasks: list[Task] = []
+        for tasks in groups.values():
+            for task in tasks:
+                all_tasks.append(task)
+        return all_tasks
 
-    def _grouped_by_file_widths(self, tasks: list[Task]) -> tuple[int, int, int]:
-        col_due    = max(10, min(max((len(t.due_date_str) for t in tasks), default=10), 15))
+    def _grouped_by_file_widths(self, tasks: list[Task]) -> ColumnWidths:
+        """
+        Calculates the optimal column widths for the grouped view (by file)
+        based on the content of the tasks and the console width.
+        Returns a `ColumnWidths` dataclass instance with the calculated widths.
+        """
+        col_due    = max(
+            10, min(max((len(t.due_date_str) for t in tasks), default=10), 15)
+        )
         col_status = max(len(self._GROUPED_COLS[1]), 3)  # 'Status' = 6
 
         overhead  = 4 + len(_SEP) * 2 + 5
         col_text  = max(10, console.width - overhead - col_due - col_status)
 
-        return col_due, col_status, col_text
+        return ColumnWidths(
+            due=col_due, file=0, status=col_status, text=col_text
+        )
 
-    def _grouped_by_file_row(
+    def _grouped_by_file_header(self, column_widths: ColumnWidths) -> str:
+        """
+        Returns the formatted header string for the grouped view (by file),
+        with columns for due date, status and task text.
+        """
+        s = str_with_fixed_width
+        return (
+            f'   {_PFX_NONE}{s(self._GROUPED_COLS[0], column_widths.due)}{_SEP}'
+            f'{s(self._GROUPED_COLS[1], column_widths.status)}{_SEP}'
+            f'{self._GROUPED_COLS[2]}'
+        )
+
+    def _fzf_choices_grouped_by_file(
+        self,
+        groups: dict[str, list[Task]],
+        column_widths: ColumnWidths,
+    ) -> tuple[list[Task], list[Choice]]:
+        """
+        Returns a tuple containing:
+
+        - a list of `Task` objects corresponding to the selectable task rows in
+          the fuzzy finder (excluding file header rows) and
+        - a list of `Choice` objects for the grouped view (by file), with
+          formatted row strings for each file header and task.
+
+        Notes
+        -----
+        The fuzzy finder also contains file header rows for each file group,
+        which are not tasks. So the result (int index) is NOT a direct index
+        into the tasks list (tasks). tasks_by_choice_index maps fuzzy choice
+        indices to tasks, skipping the file header rows.
+        (The date-sorted view doesn't have file header rows, so tasks[resukt]
+        is valid there without indirection.)
+        """
+        tasks_by_choice_index: list[Task] = []
+        choices: list[Choice]  = []
+
+        total_row_width = 4 + 2*len(_SEP) + column_widths.total()
+
+        for file_path, tasks in groups.items():
+            # File headers use the path string as value.
+            # Selecting a header opens the file at line 1.
+            fill = '─' * max(0, total_row_width - len(file_path) - 4)
+            choices.append(
+                Choice(value=file_path, name=f' ── {file_path} {fill}')
+            )
+
+            for task in tasks:
+                idx = len(tasks_by_choice_index)
+                tasks_by_choice_index.append(task)
+                choices.append(Choice(
+                    value=idx,
+                    name=self._row_for_grouped_by_file_view(task, column_widths),
+                ))
+
+        return tasks_by_choice_index, choices
+
+    def _row_for_grouped_by_file_view(
         self,
         task: Task,
-        col_due: int,
-        col_status: int,
-        col_text: int,
+        column_widths: ColumnWidths
     ) -> str:
-        s      = str_with_fixed_width
+        """
+        Returns the formatted row string for a task in the grouped view (by
+        file), with columns for due date, status and task text.
+        """
         prefix = self._urgency_prefix(task)
-        due    = s(task.due_date_str, col_due)
-        status = s(task.status_display, col_status)
-        text   = s(task.text, col_text)
+        due    = str_with_fixed_width(task.due_date_str, column_widths.due)
+        status = str_with_fixed_width(task.status_display, column_widths.status)
+        text   = str_with_fixed_width(task.text, column_widths.text)
         return f'{prefix}{due}{_SEP}{status}{_SEP}{text}'
-
-    # ------------------------------------------------------------------
-    # Shared helpers
-    # ------------------------------------------------------------------
 
     @staticmethod
     def _urgency_prefix(task: Task) -> str:
-        """Return a 4-char urgency indicator prefix for the due-date column."""
+        """
+        Returns a 4-char urgency indicator prefix for the due-date column:
+
+        - '!!! ' for overdue tasks
+        - '!   ' for tasks due today
+        - '    ' (4 spaces) for all other tasks
+        """
         if task.is_overdue:
             return _PFX_OVERDUE  # '!!! '
         if task.is_today:
@@ -336,10 +396,19 @@ class ListCommand:
 
     @staticmethod
     def _run_fuzzy(choices: list[Choice], header: str) -> Any:
-        """Launch InquirerPy fuzzy finder and return the selected value.
+        """
+        Launches InquirerPy fuzzy finder and returns the selected value.
 
-        Raises KeyboardInterrupt if the user presses Ctrl-C.
-        Returns an int index if the user selects a task row.
+        Raises
+        ------
+        KeyboardInterrupt
+            If the user presses Ctrl + C to cancel the selection.
+
+        Returns
+        -------
+        Any
+            The value of the selected choice, which can be an int index for task
+            rows or a str file path for file header rows.
         """
         result = inquirer.fuzzy(  # type: ignore
             message=header,
@@ -365,7 +434,7 @@ class ListCommand:
         return result
 
     def _open_editor(self, task: Task) -> None:
-        """Open the file at the task's line number in the configured editor."""
+        """Opens the file at the task's line number in the configured editor."""
         abs_path = os.path.abspath(task.file_path)
         editor   = self._config.editor or os.environ.get('EDITOR', 'nvim')
 

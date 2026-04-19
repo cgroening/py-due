@@ -4,6 +4,15 @@ from datetime import date
 
 @dataclass
 class Task:
+    """
+    Represents a single task along with its metadata.
+
+    Attributes
+    ----------
+    file_path : str
+
+    """
+
     file_path: str        # relative to CWD
     line_number: int      # 1-based, first line of the task
     status: str           # ' ', 'x', '.', 'c', '/'
