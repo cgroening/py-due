@@ -8,6 +8,10 @@ class YamlConfigStorage(BaseConfigStorage):
     _CONFIG_PATH = Path.home() / '.config' / 'due' / 'config.yaml'
 
     def load(self) -> Config:
+        """
+        Loads the application configuration from a YAML file and returns it as
+        a `Config` object.
+        """
         if not self._CONFIG_PATH.exists():
             return Config()
 

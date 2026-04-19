@@ -60,34 +60,6 @@ PathArg        = Annotated[
 ]
 
 
-def _validate_due_filter(due_filter: int | None) -> None:
-    if due_filter is not None and due_filter not in (-1, 0, 1):
-        print_error(
-            f'Invalid value for --due-filter/-w: {due_filter}. '
-            'Valid values are: -1 (overdue), 0 (today), 1 (future).'
-        )
-        raise typer.Exit(1)
-
-
-def _run(
-    sort_tasks_by_date: bool,
-    include_undated_tasks: bool,
-    include_closed_tasks: bool,
-    due_filter: int | None,
-    path: str | None,
-) -> None:
-    _validate_due_filter(due_filter)
-    root_dir = str(Path(path).resolve()) if path else str(Path.cwd())
-    from due.cli.commands.list_ import ListCommand
-    ListCommand(_storage, _service, _config_storage).run(
-        root_dir=root_dir,
-        sort_tasks_by_date=sort_tasks_by_date,
-        include_undated_tasks=include_undated_tasks,
-        include_closed_tasks=include_closed_tasks,
-        due_filter=due_filter,
-    )
-
-
 @app.callback()
 def callback(
     ctx: typer.Context,
@@ -123,6 +95,34 @@ def list_cmd(
         include_checked_and_cancelled_tasks,
         due_filter,
         path,
+    )
+
+
+def _validate_due_filter(due_filter: int | None) -> None:
+    if due_filter is not None and due_filter not in (-1, 0, 1):
+        print_error(
+            f'Invalid value for --due-filter/-w: {due_filter}. '
+            'Valid values are: -1 (overdue), 0 (today), 1 (future).'
+        )
+        raise typer.Exit(1)
+
+
+def _run(
+    sort_tasks_by_date: bool,
+    include_undated_tasks: bool,
+    include_closed_tasks: bool,
+    due_filter: int | None,
+    path: str | None,
+) -> None:
+    _validate_due_filter(due_filter)
+    root_dir = str(Path(path).resolve()) if path else str(Path.cwd())
+    from due.cli.commands.list_ import ListCommand
+    ListCommand(_storage, _service, _config_storage).run(
+        root_dir=root_dir,
+        sort_tasks_by_date=sort_tasks_by_date,
+        include_undated_tasks=include_undated_tasks,
+        include_closed_tasks=include_closed_tasks,
+        due_filter=due_filter,
     )
 
 

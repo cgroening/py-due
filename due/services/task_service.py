@@ -2,10 +2,14 @@ from datetime import date
 from due.domain.models import Task
 
 
+# Tasks with these statuses are hidden by default (unless --include-closed)
 HIDDEN_STATUSES = {'x', 'c'}
 
 
 class TaskService:
+    """
+    Service for filtering, sorting and grouping tasks.
+    """
     def filter_tasks(
         self,
         tasks: list[Task],
@@ -13,6 +17,10 @@ class TaskService:
         include_closed_tasks: bool = False,
         due_filter: int | None = None,
     ) -> list[Task]:
+        """
+        Filters tasks based on the provided options and returns the
+        filtered list.
+        """
         result = tasks
 
         if not include_closed_tasks:
@@ -42,12 +50,13 @@ class TaskService:
         return result
 
     def sort_by_date(self, tasks: list[Task]) -> list[Task]:
-        """Sort by due date ascending (oldest first).
+        """
+        Sorts by due date ascending (oldest first).
 
         Order:
           1. Tasks with parseable due date (oldest first)
-          2. Tasks with unparseable @due tag
-          3. Tasks without @due tag (only when --all-tasks)
+          2. Tasks with unparseable `@due` tag
+          3. Tasks without `@due` tag (only when `--all-tasks` is used)
         """
         def sort_key(t: Task) -> tuple[int, date]:
             if t.due_date is not None:
@@ -59,7 +68,7 @@ class TaskService:
         return sorted(tasks, key=sort_key)
 
     def group_by_file(self, tasks: list[Task]) -> dict[str, list[Task]]:
-        """Group tasks by file path, preserving original file order."""
+        """Groups tasks by file path, preserving original file order."""
         groups: dict[str, list[Task]] = {}
         for task in tasks:
             if task.file_path not in groups:
