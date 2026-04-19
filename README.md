@@ -8,6 +8,8 @@ the exact line in your editor.
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 [![PyPI](https://img.shields.io/pypi/v/pydue)](https://pypi.org/project/pydue/)
 
+<img src="https://raw.githubusercontent.com/cgroening/py-due/main/images/logo.png" width="200" alt="Termplate Logo">
+
 ## Table of Contents
 
 - [Features](#features)
