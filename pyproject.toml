@@ -1,5 +1,5 @@
 [project]
-name = "due"
+name = "pydue"
 version = "0.1.0"
 authors = [
     { name = "Corvin Gröning" }
@@ -21,9 +21,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/cgroening/due"
-Repository = "https://github.com/cgroening/due"
-Changelog = "https://github.com/cgroening/due/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/cgroening/py-due"
+Repository = "https://github.com/cgroening/py-due"
+Changelog = "https://github.com/cgroening/py-due/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [
