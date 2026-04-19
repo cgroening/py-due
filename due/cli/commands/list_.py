@@ -64,6 +64,10 @@ class ListCommand:
         Service instance for filtering, sorting, and grouping tasks.
     _config_storage : YamlConfigStorage
         Storage instance for loading configuration (e.g., editor settings).
+    _config : Config
+        Loaded configuration instance.
+    _root_dir : str
+        Root directory for loading tasks, set when `run()` is called.
     """
     _FLAT_COLS    = ('Due Date', 'File', 'St.', 'Task')
     _GROUPED_COLS = ('Due Date', 'St.', 'Task')
@@ -103,6 +107,8 @@ class ListCommand:
 
         Parameters
         ----------
+        root_dir : str
+            Root directory for loading tasks from Markdown files.
         sort_tasks_by_date : bool
             If `True`, tasks are shown in a flat list sorted by due date.
             If `False` (default), tasks are grouped by file.
@@ -224,7 +230,9 @@ class ListCommand:
             10, min(max((len(t.due_date_str) for t in tasks), default=10), 15)
         )
         col_status = max(len(self._FLAT_COLS[2]), 3)  # 'Status' = 6
-        max_file   = max((len(self._display_path(t.file_path)) for t in tasks), default=5)
+        max_file   = max(
+            (len(self._display_path(t.file_path)) for t in tasks), default=5
+        )
         col_file   = min(max(len(self._FLAT_COLS[1]), max_file), 40)
 
         # 4-char urgency prefix + 3 separators + fuzzy-prompt left padding
@@ -246,7 +254,9 @@ class ListCommand:
         """
         prefix = self._urgency_prefix(task)
         due    = str_with_fixed_width(task.due_date_str, column_widths.due)
-        file_  = str_with_fixed_width(self._display_path(task.file_path), column_widths.file)
+        file_  = str_with_fixed_width(
+            self._display_path(task.file_path), column_widths.file
+        )
         status = str_with_fixed_width(task.status_display, column_widths.status)
         text   = str_with_fixed_width(task.text, column_widths.text)
         return f'{prefix}{due}{_SEP}{file_}{_SEP}{status}{_SEP}{text}'
